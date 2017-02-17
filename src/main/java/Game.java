@@ -1,5 +1,6 @@
 
-import java.util.Random;
+import javafx.util.Pair;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -33,13 +34,41 @@ public class Game {
     }
 
     public static void loop() {
-        EntityManager.enemies.forEach(e -> e.moveTowards(Game.mouseXAdj, Game.mouseYAdj, 2));
+        for (EntityManager.Enemy e : EntityManager.enemies) {
+            e.moveTowards(Game.mouseXAdj, Game.mouseYAdj, 2);
+            EntityManager.Enemy closest;
+
+            if (EntityManager.dirty.size() == 0 && (closest=e.getClosest()) != e) {
+                e.consume(closest);
+            }
+        }
+
         EntityManager.dirty.forEach(EntityManager.enemies::remove);
+        EntityManager.dirty.clear();
     }
 
     public static void stop() {
         RenderManager.stop();
         running = false;
+    }
+
+    public static void onKeyboard(long window, int key, int scancode, int action, int mods) {
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+            stop();
+        }
+    }
+
+    public static void onMouse(long window, int button, int action, int mods) {
+        if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
+            stop();
+        }
+    }
+
+    public static void onMouseMove(long window, double x, double y) {
+        mouseX = x;
+        mouseY = y;
+        mouseXAdj = -1+2*mouseX/windowX;
+        mouseYAdj = -(-1+2*mouseY/windowY);
     }
 
     public static void main(String[] args) {

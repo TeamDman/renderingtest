@@ -50,22 +50,10 @@ public class RenderManager {
             throw new RuntimeException("Failed to create the GLFW window");
         }
 
-        glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-                Game.stop();
-            }
-        });
-        glfwSetMouseButtonCallback(window, (window, button, action, mods) -> {
-            if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
-                Game.stop();
-            }
-        });
-        glfwSetCursorPosCallback(window, (window,x,y) -> {
-            Game.mouseX = x;
-            Game.mouseY = y;
-            Game.mouseXAdj = -1+2*Game.mouseX/Game.windowX;
-            Game.mouseYAdj = -(-1+2*Game.mouseY/Game.windowY);
-        });
+        glfwSetKeyCallback(window, Game::onKeyboard);
+        glfwSetMouseButtonCallback(window, Game::onMouse);
+        glfwSetCursorPosCallback(window, Game::onMouseMove);
+
         glfwMakeContextCurrent(window);
         glfwSwapInterval(1); //v-sync
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -95,16 +83,22 @@ public class RenderManager {
     }
 
     private static void drawNewBuffer() {
-
+        double size = 0.1;
         glColor3f(1.0f, 0.0f, 1.0f);
         glPushMatrix();
-        glTranslated(Game.mouseXAdj,Game.mouseYAdj,0);
+        glTranslated(Game.mouseXAdj-size/2,Game.mouseYAdj-size/2,0);
         glBegin(GL_POLYGON);
-        glVertex3f(0f, 0f, 0f);
-        glVertex3f(0.1f, 0f, 0f);
-        glVertex3f(0.05f, -0.1f, 0f);
+        glVertex3d(0f, 0f, 0f);
+        glVertex3d(size, 0f, 0f);
+        glVertex3d(size/2, -size, 0f);
         glEnd();
         glPopMatrix();
+        glPushMatrix();
+        glTranslated(Game.mouseXAdj-size/2, Game.mouseYAdj-size/2,1);
+        glBegin(GL_LINE_LOOP);
+        glVertex2d(Game.mouseXAdj,Game.mouseYAdj);
+        glPopMatrix();
+
 
 
         EntityManager.enemies.forEach(RenderManager::drawEnemy);
@@ -114,6 +108,7 @@ public class RenderManager {
         double x = enemy.x;
         double y = enemy.y;
         double size = Math.sqrt(enemy.size) * 0.1;
+        System.out.println(enemy.size + " \t " + size);
         glColor3f(1.0f, 0.0f, 0.0f);
         glPushMatrix();
         glTranslated(x,y,0);
