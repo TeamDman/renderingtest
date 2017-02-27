@@ -6,7 +6,7 @@ import org.lwjgl.opengl.GL;
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
  * Created by User on 14/02/2017.
@@ -15,6 +15,7 @@ public class RenderManager {
     private static long window;
     private static GLFWVidMode videomode;
     private static long monitor;
+
     public static void init() {
         System.out.println("Using LWJGL " + Version.getVersion() + "!");
 
@@ -44,7 +45,7 @@ public class RenderManager {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-        glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+//        glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
         window = glfwCreateWindow(Game.windowX, Game.windowY, "Hello World!", Game.fullscreen ? monitor : NULL, NULL);
         if (window == NULL) {
             throw new RuntimeException("Failed to create the GLFW window");
@@ -56,7 +57,7 @@ public class RenderManager {
 
         glfwMakeContextCurrent(window);
         glfwSwapInterval(1); //v-sync
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+//        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
         glfwShowWindow(window);
 
 
@@ -73,7 +74,7 @@ public class RenderManager {
 
             glfwSwapBuffers(window); // swap the color buffers
 //            glfwSetWindowPos(window, (int) (Math.sin(System.currentTimeMillis() / 100.0) * 50) + 500, 500);//(int) Math.cos(System.currentTimeMillis()*100)*500+500);
-            glfwSetWindowPos(window, videomode.width()/2-Game.windowX/2,videomode.height()/2-Game.windowY/2);
+            glfwSetWindowPos(window, videomode.width() / 2 - Game.windowX / 2, videomode.height() / 2 - Game.windowY / 2);
             glfwPollEvents();
         }
     }
@@ -83,41 +84,82 @@ public class RenderManager {
     }
 
     private static void drawNewBuffer() {
-        double size = 0.1;
+
         glColor3f(1.0f, 0.0f, 1.0f);
-        glPushMatrix();
-        glTranslated(Game.mouseXAdj-size/2,Game.mouseYAdj-size/2,0);
-        glBegin(GL_POLYGON);
-        glVertex3d(0f, 0f, 0f);
-        glVertex3d(size, 0f, 0f);
-        glVertex3d(size/2, -size, 0f);
-        glEnd();
-        glPopMatrix();
-        glPushMatrix();
-        glTranslated(Game.mouseXAdj-size/2, Game.mouseYAdj-size/2,1);
-        glBegin(GL_LINE_LOOP);
-        glVertex2d(Game.mouseXAdj,Game.mouseYAdj);
-        glPopMatrix();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        drawCrosshair();
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        drawPlayer();
 
 
-
+        glColor3f(1.0f, 0.0f, 0.0f);
         EntityManager.enemies.forEach(RenderManager::drawEnemy);
+
+        glColor3f(1f, 0.1f, 0.1f);
+        EntityManager.lasers.forEach(RenderManager::drawLaser);
     }
 
     private static void drawEnemy(EntityManager.Enemy enemy) {
         double x = enemy.x;
         double y = enemy.y;
-        double size = Math.sqrt(enemy.size) * 0.1;
-        System.out.println(enemy.size + " \t " + size);
-        glColor3f(1.0f, 0.0f, 0.0f);
+        double size = Math.min(enemy.size / 10d, 0.2);
         glPushMatrix();
-        glTranslated(x,y,0);
-        glRotatef(-90f + (float) Math.toDegrees(Math.atan2(Game.mouseYAdj-y,Game.mouseXAdj-x)),0,0,1);
+        glTranslated(x, y, 0);
+        glRotatef(-90f + (float) Math.toDegrees(Math.atan2(EntityManager.player.y - y, EntityManager.player.x - x)), 0, 0, 1);
         glBegin(GL_POLYGON);
-        glVertex3d(-size, 0, 1f);
-        glVertex3d(size, 0 , 1f);
-        glVertex3d(0,  size, 1f);
+        {
+            glVertex3d(-size, 0, 1f);
+            glVertex3d(size, 0, 1f);
+            glVertex3d(0, size, 1f);
+        }
         glEnd();
         glPopMatrix();
+    }
+
+    private static void drawPlayer() {
+        double size = 0.1;
+        double x = EntityManager.player.x;
+        double y = EntityManager.player.y;
+        glPushMatrix();
+        glTranslated(x, y, 0);
+        glRotatef(-90f + (float) Math.toDegrees(Math.atan2(Game.mouseYAdj - y, Game.mouseXAdj - x)), 0, 0, 1);
+        glBegin(GL_POLYGON);
+        {
+            glVertex3d(-size, 0, 1f);
+            glVertex3d(size, 0, 1f);
+            glVertex3d(0, size, 1f);
+        }
+        glEnd();
+        glPopMatrix();
+    }
+
+    private static void drawCrosshair() {
+        double size = 0.05;
+        glPushMatrix();
+        glTranslated(Game.mouseXAdj - size / 2, Game.mouseYAdj - size / 2, 1);
+        glBegin(GL_POLYGON);
+        {
+            glVertex2d(0, 0);
+            glVertex2d(size, 0);
+            glVertex2d(size, size);
+            glVertex2d(0, size);
+        }
+        glEnd();
+        glPopMatrix();
+    }
+
+    private static void drawLaser(EntityManager.Laserbeam laser) {
+        glLineWidth(laser.lifecycle--);
+        glBegin(GL_LINES);
+        {
+            glVertex2d(laser.x, laser.y);
+            glVertex2d(laser.ax, laser.ay);
+        }
+        glEnd();
+        if (laser.lifecycle <= 0)
+            EntityManager.dirty.add(laser);
     }
 }
