@@ -1,3 +1,7 @@
+import com.sun.javafx.geom.Vec2d;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -11,6 +15,12 @@ public class Game {
     public static boolean fullscreen = false;
     public static boolean running = true;
     public static boolean allowCombine = false;
+    public static ArrayList<Vec2d> vertices;
+    public static HashMap<Integer, Boolean> controls;
+
+    static {
+
+    }
 
     public static void run() {
         EntityManager.spawnNewPlayer();
@@ -31,12 +41,13 @@ public class Game {
     public static void loop() {
         EntityManager.Player player = EntityManager.player;
         EntityManager.enemies.forEach(e -> e.moveTowards(player));
-        player.moveTowards(player.x + player.nextX, player.y + player.nextY);
+        player.move(player.nextX, player.nextY);
 
         EntityManager.dirty.forEach(EntityManager.enemies::remove);
         EntityManager.dirty.forEach(EntityManager.lasers::remove);
         EntityManager.dirty.clear();
         //TODO: Minkowski difference for collision detection
+        //TODO: http://www.metanetsoftware.com/technique/tutorialA.html#section1
     }
 
     public static void stop() {
@@ -57,6 +68,7 @@ public class Game {
             player.nextY = -1;
         if (key == GLFW_KEY_W)
             player.nextY = 1;
+
     }
 
     public static void onMouse(long window, int button, int action, int mods) {

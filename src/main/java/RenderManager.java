@@ -1,7 +1,9 @@
+import com.sun.javafx.geom.Vec2d;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -103,20 +105,26 @@ public class RenderManager {
     }
 
     private static void drawEnemy(EntityManager.Enemy enemy) {
+        double size = Math.min(enemy.size / 10d, 0.2);
         double x = enemy.x;
         double y = enemy.y;
-        double size = Math.min(enemy.size / 10d, 0.2);
-        glPushMatrix();
-        glTranslated(x, y, 0);
-        glRotatef(-90f + (float) Math.toDegrees(Math.atan2(EntityManager.player.y - y, EntityManager.player.x - x)), 0, 0, 1);
+        double theta = -Math.PI / 2 + Math.atan2(EntityManager.player.y - y, EntityManager.player.x - x);
+//        double theta = -Math.PI/2 +  Math.atan2(Game.mouseYAdj - y, Game.mouseXAdj - x);
+        Vector2 a = new Vector2(-size, 0).rotate(theta).translate(x, y);
+        Vector2 b = new Vector2(size, 0).rotate(theta).translate(x, y);
+        Vector2 c = new Vector2(0, size).rotate(theta).translate(x, y);
+
         glBegin(GL_POLYGON);
         {
-            glVertex3d(-size, 0, 1f);
-            glVertex3d(size, 0, 1f);
-            glVertex3d(0, size, 1f);
+            vert2d(a);
+            vert2d(b);
+            vert2d(c);
         }
         glEnd();
-        glPopMatrix();
+    }
+
+    private static void vert2d(Vec2d vec) {
+        GL11.glVertex2d(vec.x, vec.y);
     }
 
     private static void drawPlayer() {
@@ -128,9 +136,9 @@ public class RenderManager {
         glRotatef(-90f + (float) Math.toDegrees(Math.atan2(Game.mouseYAdj - y, Game.mouseXAdj - x)), 0, 0, 1);
         glBegin(GL_POLYGON);
         {
-            glVertex3d(-size, 0, 1f);
-            glVertex3d(size, 0, 1f);
-            glVertex3d(0, size, 1f);
+            glVertex2d(-size, 0);
+            glVertex2d(size, 0);
+            glVertex2d(0, size);
         }
         glEnd();
         glPopMatrix();

@@ -29,14 +29,6 @@ public class EntityManager {
             this.y = y;
         }
 
-        public void moveTowards(Entity e) {
-            moveTowards(e.x, e.y);
-        }
-
-        public void moveTowards(double x, double y) {
-            System.out.println("Entity not overriding moveTowards! FIX!");
-        }
-
         @Override
         public String toString() {
             return this.getClass().getCanonicalName() + " [x: " + x + ", y: " + y + "]";
@@ -51,13 +43,16 @@ public class EntityManager {
             this.size = 1;
         }
 
-        @Override
         public void moveTowards(double x, double y) {
             double deltax = x - this.x;
             double deltay = y - this.y;
             double deltahyp = Math.sqrt(deltax * deltax + deltay * deltay);
             this.x += deltax / deltahyp * speed;
             this.y += deltay / deltahyp * speed;
+        }
+
+        public void moveTowards(Entity e) {
+            moveTowards(e.x, e.y);
         }
 
         public void checkKill() {
@@ -79,17 +74,9 @@ public class EntityManager {
             lasers.add(new Laserbeam(this.x, this.y, x, y));
         }
 
-        @Override
-        public void moveTowards(double x, double y) {
-//            double deltax = x - this.x;
-//            double deltay = y - this.y;
-//            double deltahyp = Math.sqrt(x * x + y * y);
-//            this.x += deltax / deltahyp * speed;
-//            this.y += deltay / deltahyp * speed;
-//            if (Helper.isNear(this.x, x, distToKill) && Helper.isNear(this.y, y, distToKill)) {
-//                System.out.println("dead");
-//                System.exit(1);
-//            }
+        public void move(double x, double y) {
+            this.x += x * 0.01;
+            this.y += y * 0.01;
         }
     }
 
