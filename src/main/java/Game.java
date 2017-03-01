@@ -16,10 +16,12 @@ public class Game {
     public static boolean running = true;
     public static boolean allowCombine = false;
     public static ArrayList<Vec2d> vertices;
-    public static HashMap<Integer, Boolean> controls;
+    public static HashMap<Key, Boolean> controls = new HashMap<>();
 
     static {
-
+        for (Key key : Key.values()) {
+            controls.put(key, false);
+        }
     }
 
     public static void run() {
@@ -59,14 +61,18 @@ public class Game {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
             stop();
         }
+        controls.put(Key.getFromId(key), action != GLFW_RELEASE);
         EntityManager.Player player = EntityManager.player;
-        if (key == GLFW_KEY_A)
+        player.nextX = 0;
+        player.nextY = 0;
+
+        if (controls.get(Key.LEFT))
             player.nextX = -1;
-        if (key == GLFW_KEY_D)
+        if (controls.get(Key.RIGHT))
             player.nextX = 1;
-        if (key == GLFW_KEY_S)
+        if (controls.get(Key.DOWN))
             player.nextY = -1;
-        if (key == GLFW_KEY_W)
+        if (controls.get(Key.UP))
             player.nextY = 1;
 
     }
@@ -87,6 +93,27 @@ public class Game {
 
     public static void main(String[] args) {
         run();
+    }
+
+    public enum Key {
+        LEFT(GLFW_KEY_A),
+        RIGHT(GLFW_KEY_D),
+        UP(GLFW_KEY_W),
+        DOWN(GLFW_KEY_S);
+
+        int id;
+
+        Key(int id) {
+            this.id = id;
+        }
+
+        static Key getFromId(int id) {
+            for (Key key : values()) {
+                if (key.id == id)
+                    return key;
+            }
+            return null;
+        }
     }
 
     private class Config {
